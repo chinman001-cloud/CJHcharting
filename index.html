@@ -71,7 +71,7 @@ header p { font-size: 13px; opacity: 0.9; }
 <button id="offlineSaveBtn" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.4);padding:4px 10px;border-radius:14px;font-size:10.5px;font-weight:600;cursor:pointer;">📥 오프라인 저장</button>
 <span id="updateBadge" title="" style="display:none;position:absolute;top:-11px;right:-8px;background:#e74c3c;color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:9px;white-space:nowrap;cursor:help;box-shadow:0 1px 3px rgba(0,0,0,0.3);">새 버전!</span>
 </div>
-<span style="font-size:10px;opacity:0.7;">최종 수정: 2026-08-17</span>
+<span id="lastModifiedSpan" style="font-size:10px;opacity:0.7;">최종 수정: 확인 중...</span>
 </div>
 </header>
 <div class="tab-container" id="tabBar"></div>
@@ -89,6 +89,7 @@ function tryUnlock(){
     document.getElementById('lockScreen').style.display = 'none';
     document.getElementById('appContainer').style.display = '';
     if(typeof checkForUpdateBadge === 'function') checkForUpdateBadge();
+    if(typeof updateHeaderDate === 'function') updateHeaderDate();
   } else {
     err.style.display = 'block';
     input.value = '';
@@ -99,6 +100,7 @@ if(sessionStorage.getItem('chartToolUnlocked') === 'yes'){
   document.getElementById('lockScreen').style.display = 'none';
   document.getElementById('appContainer').style.display = '';
   if(typeof checkForUpdateBadge === 'function') checkForUpdateBadge();
+  if(typeof updateHeaderDate === 'function') updateHeaderDate();
 }
 document.getElementById('lockSubmitBtn').onclick = tryUnlock;
 document.getElementById('lockPassword').addEventListener('keydown', function(e){ if(e.key === 'Enter') tryUnlock(); });
@@ -107,7 +109,14 @@ document.getElementById('lockPassword').addEventListener('keydown', function(e){
    0. 최상위 탭 정의 (7개)
    ========================================================= */
 /* =========================================================
-   0-1. TABS
+   0-1. 자동 최종수정일 확인 (GitHub 커밋 기록 기반)
+   ========================================================= */
+const GH_COMMITS_API = "https://api.github.com/repos/CJHtools/CJHcharting/commits?path=index.html&per_page=1";
+// 이 값은 "오프라인 저장" 시점에 자동으로 채워짐(코드에서 직접 수정할 필요 없음). 원본(웹)에서는 항상 null.
+let LOCAL_SNAPSHOT_DATE = null;
+
+/* =========================================================
+   0-2. TABS
    ========================================================= */
 const TABS = [
   { id:"jabo", label:"자보 차팅" },
@@ -1298,12 +1307,49 @@ async function fetchLatestSource(){
   throw lastErr || new Error('모든 주소 시도 실패');
 }
 
+// GitHub 커밋 기록에서 index.html의 최신 수정일(YYYY-MM-DD)을 직접 조회 (수동 갱신 불필요)
+async function getLatestCommitDate(){
+  const res = await fetch(GH_COMMITS_API, { cache: 'no-store' });
+  if(!res.ok) throw new Error('GitHub API HTTP ' + res.status);
+  const data = await res.json();
+  if(!data || !data[0] || !data[0].commit) throw new Error('커밋 정보 없음');
+  const iso = data[0].commit.committer.date || data[0].commit.author.date;
+  return iso.slice(0,10);
+}
+
+async function updateHeaderDate(){
+  const span = document.getElementById('lastModifiedSpan');
+  if(!span) return;
+  if(LOCAL_SNAPSHOT_DATE){
+    // 오프라인 저장본: 저장 시점에 이미 기록해둔 날짜를 그대로 표시(네트워크 불필요)
+    span.textContent = '최종 수정: ' + LOCAL_SNAPSHOT_DATE + ' (오프라인 저장본)';
+    return;
+  }
+  try{
+    const d = await getLatestCommitDate();
+    span.textContent = '최종 수정: ' + d;
+    try{ localStorage.setItem('chartToolLastCommitDate', d); } catch(e){}
+  } catch(e){
+    console.warn('최종수정일 조회 실패:', e);
+    let cached = null;
+    try{ cached = localStorage.getItem('chartToolLastCommitDate'); } catch(e2){}
+    span.textContent = cached ? ('최종 수정: ' + cached + ' (오프라인 캐시)') : '최종 수정: 확인 불가';
+  }
+}
+
 async function saveOfflineCopy(){
   const btn = document.getElementById('offlineSaveBtn');
   const original = btn.textContent;
   try{
     const text = await fetchLatestSource();
-    const blob = new Blob([text], { type: 'text/html' });
+    let snapshotDate = null;
+    try{ snapshotDate = await getLatestCommitDate(); } catch(e){ /* 실패해도 저장은 계속 진행 */ }
+    let finalText = text;
+    if(snapshotDate){
+      // 다운로드되는 사본에 "저장 시점의 최신 커밋 날짜"를 그대로 새겨넣음 -> 이후 이 사본을 열면 그 날짜가 고정 표시됨
+      finalText = text.replace('let LOCAL_SNAPSHOT_DATE = null;', 'let LOCAL_SNAPSHOT_DATE = "' + snapshotDate + '";');
+    }
+    const blob = new Blob([finalText], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -1335,13 +1381,14 @@ async function checkForUpdateBadge(attempt){
     badge.textContent = '확인중';
     badge.title = '업데이트 확인 중...';
   }
-  const localDateMatch = document.documentElement.innerHTML.match(/최종 수정: (\d{4}-\d{2}-\d{2})/);
-  const localDate = localDateMatch ? localDateMatch[1] : null;
+  if(!LOCAL_SNAPSHOT_DATE){
+    // 저장 시점 정보가 없는(구버전 방식으로 저장된) 사본 -> 비교 불가, 조용히 종료
+    badge.style.display = 'none';
+    return;
+  }
   try{
-    const remoteText = await fetchLatestSource();
-    const remoteDateMatch = remoteText.match(/최종 수정: (\d{4}-\d{2}-\d{2})/);
-    const remoteDate = remoteDateMatch ? remoteDateMatch[1] : null;
-    if(remoteDate && localDate && remoteDate > localDate){
+    const remoteDate = await getLatestCommitDate();
+    if(remoteDate > LOCAL_SNAPSHOT_DATE){
       badge.style.display = 'inline-block';
       badge.style.background = '#e74c3c';
       badge.textContent = '새 버전!';
@@ -1350,7 +1397,7 @@ async function checkForUpdateBadge(attempt){
       badge.style.display = 'inline-block';
       badge.style.background = '#16a34a';
       badge.textContent = '최신버전';
-      badge.title = '최신 버전입니다. (' + (localDate || '') + ')';
+      badge.title = '최신 버전입니다. (' + LOCAL_SNAPSHOT_DATE + ')';
     }
   } catch(e){
     console.error('업데이트 확인 실패(시도 ' + attempt + '/3):', e);
