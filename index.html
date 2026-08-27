@@ -124,8 +124,8 @@ const TABS = [
   { id:"mriRequest", label:"MRI 검사의뢰양식" },
   { id:"muscleTexture", label:"경근무늬검사" },
   { id:"insuranceChart", label:"의보차팅" },
-  { id:"fluid", label:"수액설명" },
   { id:"westernReferral", label:"양방의뢰" },
+  { id:"fluid", label:"수액설명" },
   { id:"referenceNotes", label:"유의사항" },
 ];
 
@@ -226,6 +226,7 @@ const MYOTENDON_TEXT = `#1.필요시 근건이완수기요법 - 긴장된 근육
 const MANUAL_OPTIONS = ["수면/체위전환 시", "회전·굴곡 동작 시", "보행·기립 시", "상지거상 동작 시"];
 const jaboManualTemplate = (opt) => `교통사고로 발생한 염좌에 의한 환자 호소 증상이 기본물리치료·단순재활치료를 2주, 4회 이상 시행하였음에도 호전과 악화를 반복하며 ${opt || "[선택 필요]"} 통증으로 인한 기능제한이 지속되고 있어, 기본물리치료·단순재활치료 만으로는 개선이 어렵다고 판단되어 관절가동술 등 도수치료를 의뢰함.`;
 const sanjaeManualTemplate = (opt) => `산재로 발생한 상해에 대해 환자 호소 증상이 기본물리치료·단순재활치료를 2주, 4회 이상 시행하였음에도 호전과 악화를 반복하며 ${opt || "[선택 필요]"} 통증으로 인한 기능제한이 지속되고 있어, 기본물리치료·단순재활치료 만으로는 개선이 어렵다고 판단되어 관절가동술 등 도수치료를 의뢰함.`;
+const insuranceManualTemplate = (opt) => `환자 호소 증상이 기본물리치료·단순재활치료를 2주, 4회 이상 시행하였음에도 호전과 악화를 반복하며 ${opt || "[선택 필요]"} 통증으로 인한 기능제한이 지속되고 있어, 기본물리치료·단순재활치료 만으로는 개선이 어렵다고 판단되어 관절가동술 등 도수치료를 의뢰함.`;
 
 const EXAM_PARTS = {
   "L-spine": `* 환자 지속적 치료 및 안정 휴식에도 불구하고 하부요통 및 하지부 저림을 지속적으로 호소하여 X-ray 검사상의 이상 소견과 타박으로 인한 단순근육염좌 이외의 요추부 신경학적 이상 유무 확인을 위한 정밀검사 필요하리라 판단되어, L-spine MRI 시행하기로 함.
@@ -467,6 +468,7 @@ const SHOCKWAVE_CONTRA = ["임신","출혈성 질환 또는 항응고제 복용"
 
 const REFERENCE_NOTES = {
   "자보(자동차보험) 잡다": [
+    { t: "타병원에서 같은 상병으로 물리치료 했고 4회·2주 조건을 만족하면 급여 도수가 바로 가능함. 단, 타병원 진료세부내역서 지참 및 제출이 필수(자보는 추정, 확정 아님)", d: "2026-08-27", l: "2026-08-27" },
     { t: "자보는 수납 과정이 없어서, 일반 오더를 넘긴 뒤 20~30분 지나서 탕약 오더가 들어오면 한약국에서 인지를 못 할 수 있음. 늦게 탕약을 넣는 경우에는 한약국에 메시지로 해당 내용 전달 요함.", d: "2026-08-18", l: "2026-08-18" },
     { t: "자보환자 두통 초기에 CT 의뢰해서 뇌진탕 진단 받아두면 8주 제한에 안 걸림", d: "2026-08-15", l: "2026-08-15" },
     { t: "자동차보험 치료기간 8주 제한 시행됨 (향후 치료비 안 나옴) — 신규 규정", d: "2026-08-10", l: "2026-08-10" },
@@ -519,6 +521,7 @@ const REFERENCE_NOTES = {
     { t: "자보 한약 삭감 주요 사유 3가지: ①타병원에서 이미 처방받은 경우 ②12주 초과 처방 ③21일치 초과 처방", d: "2026-02-09", l: "2026-02-09" },
   ],
   "의보 잡다": [
+    { t: "타병원에서 같은 상병으로 물리치료 했고 4회·2주 조건을 만족하면 급여 도수가 바로 가능함. 단, 타병원 진료세부내역서 지참 및 제출이 필수(의보는 확인됨)", d: "2026-08-27", l: "2026-08-27" },
     { t: "건보첩약은 시험사업 기준상 급여환자는 어떤 형태로도 처방 불가", d: "2026-08-17", l: "2026-08-17" },
     { t: "소화불량은 IR(적외선)도 인정 안 됨", d: "2026-07-30", l: "2026-07-30 이전" },
     { t: "복잡추나 50% 넘어갈 때 벌징도 삭감(자보·의보 공통)", d: "2026-07-30", l: "2026-07-30 이전" },
@@ -537,6 +540,7 @@ const REFERENCE_NOTES = {
     { t: "습식부항이 집중관리 대상이 되었으므로 오더 시 횟수 유의", d: "2026-01-09", l: "2026-01-09" },
   ],
   "산재": [
+    { t: "타병원에서 같은 상병으로 물리치료 했고 4회·2주 조건을 만족하면 급여 도수가 바로 가능함. 단, 타병원 진료세부내역서 지참 및 제출이 필수(산재는 추정, 확정 아님)", d: "2026-08-27", l: "2026-08-27" },
     { t: "침치료와 산재양방물치가 동시 인정이 안됨. 즉 같은날 넣으면 안됨. 산재도수를 위해 산재양방물치 들어가는 날에는 양방물치만 들어가거나 혹은 한방 침치료+단순운동 형태로 들어가야할 것으로 추측.", d: "2026-07-30", l: "2026-07-30 이전" },
     { t: "본원은 산재 지정병원이 아니며, 해도 S코드에 한함", d: "2026-07-30", l: "2026-07-30 이전" },
     { t: "한방물치는 인정되나 양방물치는 산재에서 불인정", d: "2026-07-30", l: "2026-07-30 이전" },
@@ -611,6 +615,7 @@ const state = {
   jaboAdmission: "inpatient",
   jaboManualOpt: null,
   sanjaeManualOpt: null,
+  insuranceManualOpt: null,
   mriPart: null,
   mriSide: "left",
   muscleTexture: null,
@@ -956,6 +961,7 @@ renderers.westernReferral = function(container){
   const subItems = [
     {id:"jaboManual", label:"자보도수의뢰"},
     {id:"sanjaeManual", label:"산재도수의뢰"},
+    {id:"insuranceManual", label:"의보도수의뢰"},
     {id:"painScrambler", label:"페인스크램블러"},
     {id:"cryo", label:"크라이오/냉각"},
     {id:"shockwave", label:"충격파 차팅"},
@@ -966,9 +972,12 @@ renderers.westernReferral = function(container){
     renderers.westernReferral(container);
   }));
   const sub = state.activeSub.westernReferral;
-  if(sub === 'jaboManual') return renderManualReferral(container, 'jaboManual', '자보도수의뢰양식', state.jaboManualOpt, (v)=>{state.jaboManualOpt=v;}, jaboManualTemplate);
+  if(sub === 'jaboManual') return renderManualReferral(container, 'jaboManual', '자보도수의뢰양식', state.jaboManualOpt, (v)=>{state.jaboManualOpt=v;}, jaboManualTemplate,
+    '타병원에서 같은 상병으로 물리치료 했고 4회·2주 조건을 만족하면 급여 도수가 바로 가능함. 단, 타병원 진료세부내역서 지참 및 제출이 필수 (자보는 추정, 확정 아님).<br><b>한방+도수는 삭감.</b> 한방치료 없는날 <b>양방물치+도수</b>로 진행해야함.');
   if(sub === 'sanjaeManual') return renderManualReferral(container, 'sanjaeManual', '산재도수의뢰양식', state.sanjaeManualOpt, (v)=>{state.sanjaeManualOpt=v;}, sanjaeManualTemplate,
-    '침치료와 산재양방물치가 같은날 들어갈 수 없음.<br><b>양방물치+단순운동치료</b> 혹은 <b>침치료+단순운동치료</b>로 시행.<br>(2주 4회 조건 충족 때까지)<br>산재환자 추나시 <b>단순추나만 청구</b> — 본인부담 80% 복잡추나는 인정 안됨.');
+    '침치료와 산재양방물치가 같은날 들어갈 수 없음.<br><b>양방물치+단순운동치료</b> 혹은 <b>침치료+단순운동치료</b>로 시행.<br>(2주 4회 조건 충족 때까지)<br>산재환자 추나시 <b>단순추나만 청구</b> — 본인부담 80% 복잡추나는 인정 안됨.<br>타병원에서 같은 상병으로 물리치료 했고 4회·2주 조건을 만족하면 급여 도수가 바로 가능함. 단, 타병원 진료세부내역서 지참 및 제출이 필수 (산재는 추정, 확정 아님).<br><b>한방+도수 가능함.</b> 단, 추나와 중복 불가.');
+  if(sub === 'insuranceManual') return renderManualReferral(container, 'insuranceManual', '의보도수의뢰양식', state.insuranceManualOpt, (v)=>{state.insuranceManualOpt=v;}, insuranceManualTemplate,
+    '타병원에서 같은 상병으로 물리치료 했고 4회·2주 조건을 만족하면 급여 도수가 바로 가능함. 단, 타병원 진료세부내역서 지참 및 제출이 필수 (의보는 확인됨).');
   if(sub === 'painScrambler') return renderPainScrambler(container);
   if(sub === 'cryo') return renderCryo(container);
   if(sub === 'shockwave') return renderShockwavePlaceholder(container);
